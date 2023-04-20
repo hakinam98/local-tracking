@@ -1,12 +1,19 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { LocationsEntity } from './entities/location.entity';
 import LocationsQuery from 'src/interface/locationQuery.interface';
+import { LocationsUtils } from 'src/utils/locations.utils';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class LocationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private cacheService: Cache,
+    private locationsUtils: LocationsUtils,
+  ) {}
   async create(createLocationDto: CreateLocationDto) {
     const location = await this.prisma.locations.create({
       data: createLocationDto,
@@ -14,7 +21,10 @@ export class LocationsService {
     return location;
   }
 
-  async findAll(query: LocationsQuery) {
+  async findAll(
+    query: LocationsQuery,
+    cacheKey: string,
+  ): Promise<LocationsEntity[]> {
     const locations = await this.prisma.locations.findMany();
 
     let locationsFilter: Array<LocationsEntity>;
@@ -29,7 +39,7 @@ export class LocationsService {
       );
     } else if (query.object_id && query.object_type) {
       locationsFilter = locations.filter(
-        (location) =>
+        (location: LocationsEntity) =>
           location.object_id === Number(query.object_id) &&
           location.object_type
             .toLowerCase()
@@ -37,12 +47,12 @@ export class LocationsService {
       );
     } else if (query.created_at) {
       locationsFilter = locations.filter(
-        (location) =>
+        (location: LocationsEntity) =>
           location.created_at.getTime() >= new Date(query.created_at).getTime(),
       );
     } else if (query.object_id && query.object_type && query.created_at) {
       locationsFilter = locations.filter(
-        (location) =>
+        (location: LocationsEntity) =>
           location.object_id === Number(query.object_id) &&
           location.object_type
             .toLowerCase()
@@ -52,6 +62,7 @@ export class LocationsService {
     } else {
       locationsFilter = locations;
     }
+    await this.cacheService.set(cacheKey, locationsFilter, 5 * 60 * 1000);
     return locationsFilter;
   }
 }

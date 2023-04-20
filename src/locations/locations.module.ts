@@ -4,10 +4,11 @@ import { LocationsController } from './locations.controller';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { redisStore } from 'cache-manager-redis-yet';
 import { Module } from '@nestjs/common';
+import { LocationsUtils } from 'src/utils/locations.utils';
 
 @Module({
   controllers: [LocationsController],
-  providers: [LocationsService],
+  providers: [LocationsService, LocationsUtils],
   imports: [
     PrismaModule,
     CacheModule.registerAsync({

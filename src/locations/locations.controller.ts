@@ -1,17 +1,6 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
-  ParseIntPipe,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Inject } from '@nestjs/common';
 import { LocationsService } from './locations.service';
 import { CreateLocationDto } from './dto/create-location.dto';
-import { UpdateLocationDto } from './dto/update-location.dto';
 import {
   ApiCreatedResponse,
   ApiOkResponse,
@@ -20,11 +9,18 @@ import {
 } from '@nestjs/swagger';
 import { LocationsEntity } from './entities/location.entity';
 import LocationsQuery from 'src/interface/locationQuery.interface';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { LocationsUtils } from 'src/utils/locations.utils';
 
 @Controller('api/locations')
 @ApiTags('Locations')
 export class LocationsController {
-  constructor(private readonly locationsService: LocationsService) {}
+  constructor(
+    @Inject(CACHE_MANAGER) private cacheService: Cache,
+    private readonly locationsService: LocationsService,
+    private locationsUtils: LocationsUtils,
+  ) {}
 
   @Post()
   @ApiCreatedResponse({ type: LocationsEntity })
@@ -52,7 +48,20 @@ export class LocationsController {
     description: 'created_at',
   })
   @ApiOkResponse({ type: LocationsEntity, isArray: true })
-  findAll(@Query() query: LocationsQuery) {
-    return this.locationsService.findAll(query);
+  async findAll(@Query() query: LocationsQuery): Promise<LocationsEntity[]> {
+    let cacheKey: string;
+    if (query.object_id && query.object_type) {
+      cacheKey = `object_id=${query.object_id}&object_type=${query.object_type}`;
+    } else if (query.created_at) {
+      cacheKey = `created_at=${query.created_at}`;
+    } else if (query.object_id && query.object_type && query.created_at) {
+      cacheKey = `object_id=${query.object_id}&object_type=${query.object_type}&created_at=${query.created_at}`;
+    } else {
+      cacheKey = 'All';
+    }
+    const cachedResp = await this.cacheService.get(cacheKey);
+    if (cachedResp) return cachedResp as LocationsEntity[];
+    const locations = await this.locationsService.findAll(query, cacheKey);
+    return locations;
   }
 }

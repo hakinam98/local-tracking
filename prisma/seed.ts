@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 async function main() {
   const locations: CreateLocationDto[] = [];
 
-  for (let i = 1; i <= 2000; i++) {
+  for (let i = 1; i <= 10000; i++) {
     const location: CreateLocationDto = {
       object_id: Math.floor(Math.random() * 200) + 1,
       object_type: ['car', 'bike', 'bus'][Math.floor(Math.random() * 3)],
