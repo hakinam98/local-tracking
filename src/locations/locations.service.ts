@@ -11,12 +11,12 @@ export class LocationsService {
     const location = await this.prisma.locations.create({
       data: createLocationDto,
     });
-
     return location;
   }
 
   async findAll(query: LocationsQuery) {
     const locations = await this.prisma.locations.findMany();
+
     let locationsFilter: Array<LocationsEntity>;
 
     if (query.object_id && !query.object_type) {

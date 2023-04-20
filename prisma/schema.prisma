@@ -2,13 +2,13 @@ generator client {
   provider = "prisma-client-js"
 }
 
-datasource mongodb {
+datasource mymongodb {
   provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
 model Locations {
-  id          String   @id @default(auto()) @map("_id") @mongodb.ObjectId
+  id          String   @id @default(auto()) @map("_id") @mymongodb.ObjectId
   object_id   Int
   object_type String
   latitude    Float

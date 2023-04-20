@@ -22,8 +22,8 @@ export class CreateLocationDto {
   @ApiProperty()
   longitude: number;
 
-  @ApiProperty({ required: false })
-  created_at?: Date;
-  @ApiProperty({ required: false })
-  updated_at?: Date;
+  // @ApiProperty({ required: false })
+  // created_at?: Date;
+  // @ApiProperty({ required: false })
+  // updated_at?: Date;
 }
