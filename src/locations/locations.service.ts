@@ -3,7 +3,6 @@ import { CreateLocationDto } from './dto/create-location.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { LocationsEntity } from './entities/location.entity';
 import LocationsQuery from 'src/interface/locationQuery.interface';
-import { LocationsUtils } from 'src/utils/locations.utils';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 
@@ -12,7 +11,6 @@ export class LocationsService {
   constructor(
     private prisma: PrismaService,
     @Inject(CACHE_MANAGER) private cacheService: Cache,
-    private locationsUtils: LocationsUtils,
   ) {}
   async create(createLocationDto: CreateLocationDto) {
     const location = await this.prisma.locations.create({
